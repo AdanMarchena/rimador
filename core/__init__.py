@@ -1,0 +1,1 @@
+"""Core poetry analysis package."""
