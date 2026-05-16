@@ -1,0 +1,9 @@
+venv-rimador/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.web/
+.states/
+.reflex/
+*.db
+*.log
