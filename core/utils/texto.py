@@ -1,0 +1,12 @@
+"""Utilities for preparing user-entered text for poetic analysis."""
+
+
+def obtener_versos(texto: str) -> list[str]:
+    """Return real verses from user-entered text.
+
+    A verse is defined by real newline characters (``\n``) entered by the
+    user. This should not be confused with the editor's visual wrapping, which
+    only changes how text is displayed on screen. Later, these verses will be
+    analyzed for metric and rhythmic structure.
+    """
+    return [linea.strip() for linea in texto.splitlines() if linea.strip()]
