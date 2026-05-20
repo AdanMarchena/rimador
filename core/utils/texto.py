@@ -1,5 +1,7 @@
 """Utilities for preparing user-entered text for poetic analysis."""
 
+SIGNOS_PUNTUACION_BASICOS = ".,;:!?\u00a1\u00bf\"'()[]{}"
+
 
 def obtener_versos(texto: str) -> list[str]:
     """Return real verses from user-entered text.
@@ -10,3 +12,12 @@ def obtener_versos(texto: str) -> list[str]:
     analyzed for metric and rhythmic structure.
     """
     return [linea.strip() for linea in texto.splitlines() if linea.strip()]
+
+
+def obtener_palabras(verso: str) -> list[str]:
+    """Return clean words from a verse."""
+    return [
+        palabra_limpia
+        for palabra in verso.split()
+        if (palabra_limpia := palabra.strip(SIGNOS_PUNTUACION_BASICOS))
+    ]

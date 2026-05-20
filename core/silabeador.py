@@ -19,6 +19,7 @@ GRUPOS_CONSONANTICOS = {
     "tl",
     "tr",
 }
+DIGRAFOS_CONSONANTICOS = {"ch", "ll", "rr"}
 
 
 def separar_silabas_palabra(palabra: str) -> list[str]:
@@ -90,7 +91,7 @@ def _calcular_corte(
     if len(consonantes) == 1:
         return siguiente_inicio - 1
 
-    if consonantes[-2:].lower() in GRUPOS_CONSONANTICOS:
+    if consonantes[-2:].lower() in GRUPOS_CONSONANTICOS | DIGRAFOS_CONSONANTICOS:
         return siguiente_inicio - 2
 
     return siguiente_inicio - 1

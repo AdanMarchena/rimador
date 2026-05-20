@@ -37,3 +37,11 @@ def test_casos_adicionales_de_silabeo():
     assert separar_silabas_palabra("aire") == ["ai", "re"]
     assert separar_silabas_palabra("bueno") == ["bue", "no"]
     assert separar_silabas_palabra("ciudad") == ["ciu", "dad"]
+
+
+def test_no_separa_digrafos_consonanticos():
+    assert separar_silabas_palabra("noche") == ["no", "che"]
+    assert separar_silabas_palabra("estrellada") == ["es", "tre", "lla", "da"]
+    assert separar_silabas_palabra("calle") == ["ca", "lle"]
+    assert separar_silabas_palabra("perro") == ["pe", "rro"]
+    assert separar_silabas_palabra("carro") == ["ca", "rro"]
