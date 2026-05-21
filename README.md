@@ -4,7 +4,7 @@ Rimador es una herramienta gratuita y experimental para analizar escritura creat
 
 Rimador busca unir tecnología, lingüística y creación artística en una herramienta accesible que permita no solo analizar textos, sino también aprender conceptos literarios y descubrir patrones que muchas veces pasan desapercibidos durante la escritura.
 
-Esta versión se encuentra actualmente en estado **beta**, por lo que algunas interpretaciones complejas del lenguaje aún pueden requerir mejoras.
+Actualmente el proyecto se encuentra en estado **beta**, por lo que algunas interpretaciones complejas del lenguaje todavía pueden requerir mejoras.
 
 ---
 
@@ -64,4 +64,125 @@ Próximamente se agregarán capturas de pantalla y ejemplos de uso.
 Clonar repositorio:
 
 ```bash
-git clone URL_DEL_REPOSITORIO
+git clone https://github.com/AdanMarchena/rimador.git
+```
+
+Entrar al proyecto:
+
+```bash
+cd rimador
+```
+
+Crear entorno virtual:
+
+```bash
+python -m venv venv-rimador
+```
+
+Activar entorno virtual:
+
+```bash
+venv-rimador\Scripts\activate
+```
+
+Instalar dependencias:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Ejecutar aplicación
+
+```bash
+reflex run
+```
+
+o
+
+```bash
+python -m reflex run
+```
+
+---
+
+## Ejecutar pruebas
+
+```bash
+python -m pytest
+```
+
+---
+
+## Filosofía del proyecto
+
+Rimador no pretende reemplazar la intuición creativa ni dictar cómo debe escribirse una canción, una letra o un poema.
+
+Su propósito es servir como apoyo técnico y educativo, ofreciendo una lectura estructurada del texto para ayudar a descubrir:
+
+- patrones métricos
+- relaciones sonoras
+- estructuras rítmicas
+- posibilidades creativas
+
+El análisis debe entenderse como una ayuda y no como una autoridad absoluta.
+
+---
+
+## Limitaciones actuales
+
+Esta versión beta todavía puede presentar errores en situaciones como:
+
+- Hiato poético
+- Sinéresis
+- Diéresis
+- Rimas complejas
+- Interpretaciones expresivas
+- Casos ambiguos del español
+- Algunas rimas asonantes avanzadas
+
+---
+
+## Hoja de ruta
+
+Próximas ideas:
+
+- Más figuras literarias
+- Enciclopedia literaria ampliada
+- Mejoras de análisis rítmico
+- Más visualizaciones
+- Sugerencias creativas asistidas
+- Exportación de análisis
+- Estadísticas avanzadas
+- Mejoras de precisión lingüística
+
+---
+
+## Apoyar el proyecto
+
+Rimador es gratuito y se mantiene gracias al apoyo voluntario de personas que desean ayudar a su desarrollo.
+
+Si la herramienta te resulta útil y quieres colaborar:
+
+### ☕ Aporte libre
+
+https://link.mercadopago.cl/biteroom
+
+### CLP $1.000
+
+https://mpago.la/29SRa9z
+
+### CLP $5.000
+
+https://mpago.la/1JeQaMT
+
+### CLP $10.000
+
+https://mpago.la/1osswVX
+
+---
+
+## Licencia
+
+MIT License
