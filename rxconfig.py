@@ -1,6 +1,7 @@
 import reflex as rx
+from reflex_base.plugins.sitemap import SitemapPlugin
 
 config = rx.Config(
     app_name="rimador",
-    disable_plugins=["SitemapPlugin"],
+    disable_plugins=[SitemapPlugin],
 )
