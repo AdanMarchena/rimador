@@ -22,6 +22,27 @@ def contar_silabas_metricas_verso(verso: str) -> int:
     return analizar_metrica_verso(verso)["silabas_metricas"]
 
 
+def resumir_metrica_texto(versos: list[str]) -> dict:
+    """Return a compact metric summary for a list of verses."""
+    analisis = [analizar_metrica_verso(verso) for verso in versos]
+    silabas_metricas = [
+        resultado["silabas_metricas"]
+        for resultado in analisis
+    ]
+    tipos_verso = [
+        resultado["tipo_verso"]
+        for resultado in analisis
+    ]
+
+    return {
+        "cantidad_versos": len(versos),
+        "tipos_verso": tipos_verso,
+        "tipo_predominante": _obtener_tipo_predominante(tipos_verso),
+        "silabas_metricas_por_verso": silabas_metricas,
+        "es_regular": len(set(silabas_metricas)) <= 1,
+    }
+
+
 def analizar_metrica_verso(verso: str) -> dict:
     """Return a detailed basic metric analysis for a verse."""
     palabras = obtener_palabras(verso)
@@ -35,6 +56,7 @@ def analizar_metrica_verso(verso: str) -> dict:
             "tipo_palabra_final": "",
             "ajuste_final": 0,
             "silabas_metricas": 0,
+            "tipo_verso": clasificar_tipo_verso(0),
         }
 
     silabas_gramaticales = contar_silabas_gramaticales_verso(verso)
@@ -53,7 +75,37 @@ def analizar_metrica_verso(verso: str) -> dict:
         "tipo_palabra_final": tipo_palabra_final,
         "ajuste_final": ajuste_final,
         "silabas_metricas": silabas_metricas,
+        "tipo_verso": clasificar_tipo_verso(silabas_metricas),
     }
+
+
+def clasificar_tipo_verso(silabas_metricas: int) -> str:
+    """Classify a verse by its metric syllable count."""
+    tipos = {
+        1: "monosílabo",
+        2: "bisílabo",
+        3: "trisílabo",
+        4: "tetrasílabo",
+        5: "pentasílabo",
+        6: "hexasílabo",
+        7: "heptasílabo",
+        8: "octosílabo",
+        9: "eneasílabo",
+        10: "decasílabo",
+        11: "endecasílabo",
+        12: "dodecasílabo",
+        13: "tridecasílabo",
+        14: "alejandrino",
+    }
+
+    return tipos.get(silabas_metricas, f"verso de {silabas_metricas} sílabas")
+
+
+def _obtener_tipo_predominante(tipos_verso: list[str]) -> str:
+    if not tipos_verso:
+        return ""
+
+    return max(tipos_verso, key=lambda tipo: tipos_verso.count(tipo))
 
 
 def clasificar_palabra_por_acento(palabra: str) -> str:

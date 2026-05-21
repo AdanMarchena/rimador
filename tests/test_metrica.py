@@ -3,8 +3,10 @@
 from core.metrica import (
     analizar_metrica_verso,
     clasificar_palabra_por_acento,
+    clasificar_tipo_verso,
     contar_silabas_gramaticales_verso,
     contar_silabas_metricas_verso,
+    resumir_metrica_texto,
 )
 
 
@@ -28,6 +30,24 @@ def test_clasifica_palabras_por_acento():
     assert clasificar_palabra_por_acento("verso") == "llana"
     assert clasificar_palabra_por_acento("m\u00fasica") == "esdrujula"
     assert clasificar_palabra_por_acento("p\u00e1jaro") == "esdrujula"
+
+
+def test_clasifica_tipo_verso():
+    assert clasificar_tipo_verso(1) == "monosílabo"
+    assert clasificar_tipo_verso(2) == "bisílabo"
+    assert clasificar_tipo_verso(3) == "trisílabo"
+    assert clasificar_tipo_verso(4) == "tetrasílabo"
+    assert clasificar_tipo_verso(5) == "pentasílabo"
+    assert clasificar_tipo_verso(6) == "hexasílabo"
+    assert clasificar_tipo_verso(7) == "heptasílabo"
+    assert clasificar_tipo_verso(8) == "octosílabo"
+    assert clasificar_tipo_verso(9) == "eneasílabo"
+    assert clasificar_tipo_verso(10) == "decasílabo"
+    assert clasificar_tipo_verso(11) == "endecasílabo"
+    assert clasificar_tipo_verso(12) == "dodecasílabo"
+    assert clasificar_tipo_verso(13) == "tridecasílabo"
+    assert clasificar_tipo_verso(14) == "alejandrino"
+    assert clasificar_tipo_verso(15) == "verso de 15 sílabas"
 
 
 def test_cuenta_silabas_metricas_con_sinalefa_basica():
@@ -74,6 +94,7 @@ def test_analiza_metrica_detallada_de_verso():
         "tipo_palabra_final": "aguda",
         "ajuste_final": 1,
         "silabas_metricas": 8,
+        "tipo_verso": "octosílabo",
     }
 
 
@@ -89,6 +110,7 @@ def test_analiza_metrica_con_ultima_palabra_en_sinalefa():
     assert analisis["tipo_palabra_final"] == "aguda"
     assert analisis["ajuste_final"] == 0
     assert analisis["silabas_metricas"] == 4
+    assert analisis["tipo_verso"] == "tetrasílabo"
 
 
 def test_analiza_metrica_con_sinalefa_y_palabra_final_llana():
@@ -101,4 +123,44 @@ def test_analiza_metrica_con_sinalefa_y_palabra_final_llana():
         "tipo_palabra_final": "llana",
         "ajuste_final": 0,
         "silabas_metricas": 3,
+        "tipo_verso": "trisílabo",
+    }
+
+
+def test_resume_metrica_texto_regular():
+    resumen = resumir_metrica_texto([
+        "casa blanca",
+        "pueblo triste",
+    ])
+
+    assert resumen == {
+        "cantidad_versos": 2,
+        "tipos_verso": ["tetrasílabo", "tetrasílabo"],
+        "tipo_predominante": "tetrasílabo",
+        "silabas_metricas_por_verso": [4, 4],
+        "es_regular": True,
+    }
+
+
+def test_resume_metrica_texto_irregular_y_predominante():
+    resumen = resumir_metrica_texto([
+        "casa blanca",
+        "la estrella",
+        "Puedo escribir",
+    ])
+
+    assert resumen["cantidad_versos"] == 3
+    assert resumen["tipos_verso"] == ["tetrasílabo", "trisílabo", "tetrasílabo"]
+    assert resumen["tipo_predominante"] == "tetrasílabo"
+    assert resumen["silabas_metricas_por_verso"] == [4, 3, 4]
+    assert resumen["es_regular"] is False
+
+
+def test_resume_metrica_texto_vacio():
+    assert resumir_metrica_texto([]) == {
+        "cantidad_versos": 0,
+        "tipos_verso": [],
+        "tipo_predominante": "",
+        "silabas_metricas_por_verso": [],
+        "es_regular": True,
     }

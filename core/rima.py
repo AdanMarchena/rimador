@@ -1,5 +1,6 @@
 """Responsibility: detect and classify rhyme patterns."""
 
+from core.data.palabras_excluidas import PALABRAS_EXCLUIDAS_RIMA
 from core.silabeador import separar_silabas_palabra
 from core.utils.texto import obtener_palabras
 
@@ -26,6 +27,21 @@ def obtener_terminacion_desde_vocal_tonica(palabra: str) -> str:
 
     indice_tonico = _obtener_indice_vocal_tonica(palabra_limpia)
     return palabra_limpia[indice_tonico:]
+
+
+def obtener_fragmento_rimante(palabra: str, tipo: str) -> str:
+    """Return the rhyming fragment for a word and rhyme type."""
+    if tipo == "sin_rima":
+        return ""
+
+    terminacion = obtener_terminacion_desde_vocal_tonica(palabra)
+    if tipo == "consonante":
+        return terminacion
+
+    if tipo == "asonante":
+        return _obtener_vocales_normalizadas(terminacion)
+
+    return ""
 
 
 def rima_consonante(palabra1: str, palabra2: str) -> bool:
@@ -59,6 +75,80 @@ def clasificar_rima(palabra1: str, palabra2: str) -> str:
     return "sin_rima"
 
 
+def detectar_rimas_internas(verso: str) -> list[dict]:
+    """Detect words inside a verse that rhyme with its final word."""
+    palabras = obtener_palabras(verso)
+    if len(palabras) < 2:
+        return []
+
+    palabra_final = palabras[-1]
+    rimas = []
+
+    for palabra in palabras[:-1]:
+        tipo = clasificar_rima(palabra, palabra_final)
+        if tipo in {"consonante", "asonante"}:
+            rimas.append(
+                {
+                    "palabra": palabra,
+                    "palabra_final": palabra_final,
+                    "tipo": tipo,
+                }
+            )
+
+    return rimas
+
+
+def detectar_rimas_en_texto(versos: list[str]) -> dict:
+    """Detect rhyming words across a full text."""
+    palabras = _obtener_palabras_indexadas(versos)
+    rimas: dict[int, dict[int, dict]] = {}
+
+    for palabra_actual in palabras:
+        coincidencias = []
+
+        for otra_palabra in palabras:
+            if palabra_actual is otra_palabra:
+                continue
+
+            tipo = clasificar_rima(
+                palabra_actual["palabra"],
+                otra_palabra["palabra"],
+            )
+            if tipo == "sin_rima":
+                continue
+
+            coincidencias.append(
+                {
+                    "tipo": tipo,
+                    "grupo": obtener_fragmento_rimante(
+                        otra_palabra["palabra"],
+                        tipo,
+                    ),
+                    "palabra": otra_palabra["palabra"],
+                }
+            )
+
+        if not coincidencias:
+            continue
+
+        mejor_tipo = _mejor_tipo_rima(coincidencias)
+        grupo = _mejor_grupo_rima(palabra_actual["palabra"], mejor_tipo, coincidencias)
+        indice_verso = palabra_actual["indice_verso"]
+        indice_palabra = palabra_actual["indice_palabra"]
+
+        rimas.setdefault(indice_verso, {})[indice_palabra] = {
+            "palabra": palabra_actual["palabra"],
+            "tipo": mejor_tipo,
+            "grupo": grupo,
+            "grupo_interno": _obtener_grupo_interno(
+                palabra_actual["palabra"],
+                mejor_tipo,
+            ),
+        }
+
+    return rimas
+
+
 def obtener_esquema_rima(versos: list[str]) -> list[str]:
     """Assign rhyme scheme letters to a list of verses."""
     esquema = []
@@ -75,6 +165,71 @@ def obtener_esquema_rima(versos: list[str]) -> list[str]:
         esquema.append(letra)
 
     return esquema
+
+
+def _obtener_palabras_indexadas(versos: list[str]) -> list[dict]:
+    palabras_indexadas = []
+
+    for indice_verso, verso in enumerate(versos):
+        for indice_palabra, palabra in enumerate(obtener_palabras(verso)):
+            palabra_normalizada = _normalizar(palabra)
+            if (
+                len(palabra_normalizada) <= 2
+                or palabra_normalizada in PALABRAS_EXCLUIDAS_RIMA
+            ):
+                continue
+
+            palabras_indexadas.append(
+                {
+                    "palabra": palabra,
+                    "indice_verso": indice_verso,
+                    "indice_palabra": indice_palabra,
+                }
+            )
+
+    return palabras_indexadas
+
+
+def _mejor_tipo_rima(coincidencias: list[dict]) -> str:
+    if any(coincidencia["tipo"] == "consonante" for coincidencia in coincidencias):
+        return "consonante"
+
+    return "asonante"
+
+
+def _mejor_grupo_rima(
+    palabra: str,
+    tipo: str,
+    coincidencias: list[dict],
+) -> str:
+    grupo_propio = obtener_fragmento_rimante(palabra, tipo)
+    if tipo == "consonante":
+        return grupo_propio
+
+    grupos_consonantes = [
+        obtener_fragmento_rimante(coincidencia["palabra"], "consonante")
+        for coincidencia in coincidencias
+        if coincidencia["grupo"] == grupo_propio
+    ]
+    grupos_consonantes = [grupo for grupo in grupos_consonantes if grupo]
+    if grupos_consonantes:
+        return _grupo_mas_frecuente(grupos_consonantes)
+
+    return grupo_propio
+
+
+def _obtener_grupo_interno(palabra: str, tipo: str) -> str:
+    if tipo == "consonante":
+        return obtener_fragmento_rimante(palabra, "consonante")
+
+    if tipo == "asonante":
+        return f"asonante:{obtener_fragmento_rimante(palabra, 'asonante')}"
+
+    return ""
+
+
+def _grupo_mas_frecuente(grupos: list[str]) -> str:
+    return max(grupos, key=lambda grupo: (grupos.count(grupo), len(grupo)))
 
 
 def _obtener_indice_vocal_tonica(palabra: str) -> int:
