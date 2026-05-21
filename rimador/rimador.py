@@ -45,6 +45,8 @@ DONATION_OPTIONS = [
     ("CLP $5.000", "https://mpago.la/1JeQaMT"),
     ("CLP $10.000", "https://mpago.la/1osswVX"),
 ]
+LOGO_SRC = "/logo/logo.png"
+FAVICON_SRC = "/favicon.png"
 
 CONCEPTOS_APRENDER = [
     {
@@ -1174,6 +1176,31 @@ def boton_donacion_flotante() -> rx.Component:
     )
 
 
+def encabezado_marca() -> rx.Component:
+    return rx.vstack(
+        rx.hstack(
+            rx.image(
+                src=LOGO_SRC,
+                alt="Logo de Rimador",
+                height="60px",
+                width="90px",
+                object_fit="cover",
+                object_position="32% 50%",
+                border_radius="10px",
+            ),
+            rx.heading("Rimador", size="9"),
+            spacing="3",
+            align="center",
+        ),
+        rx.text(
+            "Analiza métrica, ritmo básico y rima verso a verso.",
+            size="5",
+        ),
+        spacing="2",
+        align="start",
+    )
+
+
 def index() -> rx.Component:
     """Render the initial page."""
     return rx.container(
@@ -1188,15 +1215,7 @@ def index() -> rx.Component:
         ),
         rx.vstack(
             rx.hstack(
-                rx.vstack(
-                    rx.heading("Rimador", size="9"),
-                    rx.text(
-                        "Analiza métrica, ritmo básico y rima verso a verso.",
-                        size="5",
-                    ),
-                    spacing="2",
-                    align="start",
-                ),
+                encabezado_marca(),
                 menu_superior(),
                 justify="between",
                 align="center",
@@ -1215,4 +1234,4 @@ def index() -> rx.Component:
 
 
 app = rx.App()
-app.add_page(index)
+app.add_page(index, title="Rimador", image=FAVICON_SRC)
