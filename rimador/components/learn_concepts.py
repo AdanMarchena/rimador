@@ -108,3 +108,49 @@ def detalle_concepto_aprender() -> rx.Component:
         background=fondo_panel(),
         color=color_texto_principal(),
     )
+
+
+def item_concepto_aprender_expandible(concepto: dict) -> rx.Component:
+    seleccionado = State.concepto_seleccionado == concepto["id"]
+    return rx.vstack(
+        item_concepto_aprender(concepto),
+        rx.cond(
+            seleccionado,
+            detalle_concepto_aprender(),
+            rx.box(),
+        ),
+        spacing="2",
+        align="stretch",
+        width="100%",
+    )
+
+
+def lista_conceptos_aprender_expandible() -> rx.Component:
+    return rx.vstack(
+        rx.cond(
+            State.hay_conceptos_filtrados,
+            rx.vstack(
+                rx.foreach(
+                    State.conceptos_filtrados,
+                    item_concepto_aprender_expandible,
+                ),
+                spacing="3",
+                width="100%",
+            ),
+            rx.card(
+                rx.text(
+                    "No se encontraron conceptos.",
+                    color=color_texto_secundario(),
+                ),
+                width="100%",
+                padding=PANEL_PADDING,
+                border=borde_panel(),
+                border_radius=BORDER_RADIUS,
+                background=fondo_panel(),
+                color=color_texto_principal(),
+            ),
+        ),
+        spacing="3",
+        align="stretch",
+        width="100%",
+    )

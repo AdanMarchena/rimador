@@ -3,6 +3,7 @@ from core.rima import (
     detectar_rimas_en_texto,
     detectar_rimas_internas,
     obtener_esquema_rima,
+    obtener_esquemas_rima_por_estrofa,
     obtener_fragmento_rimante,
     obtener_terminacion_desde_vocal_tonica,
     obtener_ultima_palabra,
@@ -184,3 +185,57 @@ def test_obtener_esquema_rima_asigna_nueva_letra_si_no_rima():
 
 def test_obtener_esquema_rima_lista_vacia():
     assert obtener_esquema_rima([]) == []
+
+
+def test_obtener_esquemas_rima_por_estrofa_reinicia_esquema():
+    estrofas = [
+        [
+            "canto con rima",
+            "subo a la tarima",
+            "camino sin destino",
+            "vuelvo por el camino",
+        ],
+        [
+            "cierro la canción",
+            "guardo el corazón",
+            "miro la casa",
+            "cruzo por la brasa",
+        ],
+    ]
+
+    assert obtener_esquemas_rima_por_estrofa(estrofas) == [
+        {
+            "estrofa": 1,
+            "versos": estrofas[0],
+            "esquema": ["A", "A", "B", "B"],
+            "esquema_texto": "AABB",
+        },
+        {
+            "estrofa": 2,
+            "versos": estrofas[1],
+            "esquema": ["A", "A", "B", "B"],
+            "esquema_texto": "AABB",
+        },
+    ]
+
+
+def test_obtener_esquemas_rima_por_estrofa_no_mezcla_estrofas():
+    estrofas = [
+        ["casa", "flor"],
+        ["brasa", "calor"],
+    ]
+
+    assert obtener_esquemas_rima_por_estrofa(estrofas) == [
+        {
+            "estrofa": 1,
+            "versos": ["casa", "flor"],
+            "esquema": ["A", "B"],
+            "esquema_texto": "AB",
+        },
+        {
+            "estrofa": 2,
+            "versos": ["brasa", "calor"],
+            "esquema": ["A", "B"],
+            "esquema_texto": "AB",
+        },
+    ]

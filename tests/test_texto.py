@@ -1,4 +1,4 @@
-from core.utils.texto import obtener_palabras, obtener_versos
+from core.utils.texto import obtener_estrofas, obtener_palabras, obtener_versos
 
 
 def test_obtener_versos_multiples_versos():
@@ -38,6 +38,29 @@ def test_obtener_versos_texto_vacio():
 
 def test_obtener_versos_un_solo_verso():
     assert obtener_versos("Un solo verso") == ["Un solo verso"]
+
+
+def test_obtener_estrofas_separa_por_lineas_vacias():
+    texto = "verso uno\nverso dos\n\nverso tres\nverso cuatro"
+
+    assert obtener_estrofas(texto) == [
+        ["verso uno", "verso dos"],
+        ["verso tres", "verso cuatro"],
+    ]
+
+
+def test_obtener_estrofas_limpia_versos_y_acepta_multiples_lineas_vacias():
+    texto = "  verso uno  \n\tverso dos\t\n\n\n  verso tres  \n\n"
+
+    assert obtener_estrofas(texto) == [
+        ["verso uno", "verso dos"],
+        ["verso tres"],
+    ]
+
+
+def test_obtener_estrofas_texto_vacio_o_solo_espacios():
+    assert obtener_estrofas("") == []
+    assert obtener_estrofas("\n  \n\t") == []
 
 
 def test_obtener_palabras_limpia_puntuacion_basica():

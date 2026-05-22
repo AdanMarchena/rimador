@@ -14,6 +14,27 @@ def obtener_versos(texto: str) -> list[str]:
     return [linea.strip() for linea in texto.splitlines() if linea.strip()]
 
 
+def obtener_estrofas(texto: str) -> list[list[str]]:
+    """Return stanzas separated by one or more blank lines."""
+    estrofas = []
+    estrofa_actual = []
+
+    for linea in texto.splitlines():
+        verso = linea.strip()
+        if verso:
+            estrofa_actual.append(verso)
+            continue
+
+        if estrofa_actual:
+            estrofas.append(estrofa_actual)
+            estrofa_actual = []
+
+    if estrofa_actual:
+        estrofas.append(estrofa_actual)
+
+    return estrofas
+
+
 def obtener_palabras(verso: str) -> list[str]:
     """Return clean words from a verse."""
     return [

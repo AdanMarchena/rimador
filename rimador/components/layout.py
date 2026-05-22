@@ -5,7 +5,9 @@ import reflex as rx
 from rimador.components.donations import boton_donacion_flotante
 from rimador.components.header import encabezado_marca
 from rimador.components.navigation import menu_superior
+from rimador.components.novedades import modal_novedades
 from rimador.pages.acerca import seccion_acerca_de
+from rimador.pages.analisis_completo import seccion_analisis_completo
 from rimador.pages.analizador import seccion_analizador
 from rimador.pages.aprender import seccion_aprender
 from rimador.state import State
@@ -18,13 +20,18 @@ def contenido_actual() -> rx.Component:
         rx.cond(
             State.seccion_actual == "acerca_de",
             seccion_acerca_de(),
-            seccion_analizador(),
+            rx.cond(
+                State.seccion_actual == "analisis_completo",
+                seccion_analisis_completo(),
+                seccion_analizador(),
+            ),
         ),
     )
 
 
 def layout_principal() -> rx.Component:
     return rx.container(
+        modal_novedades(),
         rx.color_mode.button(position="top-right"),
         rx.box(
             boton_donacion_flotante(),

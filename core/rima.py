@@ -167,6 +167,20 @@ def obtener_esquema_rima(versos: list[str]) -> list[str]:
     return esquema
 
 
+def obtener_esquemas_rima_por_estrofa(estrofas: list[list[str]]) -> list[dict]:
+    """Return rhyme schemes independently for each stanza."""
+    return [
+        {
+            "estrofa": indice + 1,
+            "versos": estrofa,
+            "esquema": esquema,
+            "esquema_texto": "".join(esquema),
+        }
+        for indice, estrofa in enumerate(estrofas)
+        if (esquema := obtener_esquema_rima(estrofa))
+    ]
+
+
 def _obtener_palabras_indexadas(versos: list[str]) -> list[dict]:
     palabras_indexadas = []
 

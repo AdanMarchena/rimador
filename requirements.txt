@@ -26,6 +26,7 @@ mdurl==0.1.2
 murmurhash==1.0.15
 numpy==2.4.5
 packaging==26.2
+pillow==12.2.0
 platformdirs==4.9.6
 pluggy==1.6.0
 preshed==3.0.13
@@ -64,6 +65,7 @@ reflex-components-recharts==0.9.1
 reflex-components-sonner==0.9.1
 reflex-hosting-cli==0.1.66
 regex==2026.5.9
+reportlab==4.5.1
 requests==2.34.2
 rich==14.3.4
 setuptools==82.0.1

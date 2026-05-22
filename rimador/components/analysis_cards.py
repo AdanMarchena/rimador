@@ -2,6 +2,7 @@
 
 import reflex as rx
 
+from rimador.components.help_tooltip import etiqueta_con_ayuda
 from rimador.styles.theme import (
     BORDER_RADIUS,
     PANEL_PADDING,
@@ -20,6 +21,20 @@ def _fila_resultado(etiqueta: str, valor: rx.Var) -> rx.Component:
     )
 
 
+def _fila_resultado_ayuda(
+    etiqueta: str,
+    clave_ayuda: str,
+    valor: rx.Var,
+) -> rx.Component:
+    return rx.hstack(
+        etiqueta_con_ayuda(etiqueta, clave_ayuda, weight="bold"),
+        rx.text(valor),
+        spacing="2",
+        align="start",
+        wrap="wrap",
+    )
+
+
 def rimas_internas_resultado(resultado: dict) -> rx.Component:
     """Render internal rhymes for one verse."""
     return rx.vstack(
@@ -34,23 +49,53 @@ def rimas_internas_resultado(resultado: dict) -> rx.Component:
     )
 
 
+def _etiqueta_tipo_rima(resultado: dict) -> rx.Component:
+    return rx.cond(
+        resultado["tipo_rima"] == "consonante",
+        etiqueta_con_ayuda("Tipo:", "rima_consonante", weight="bold"),
+        rx.cond(
+            resultado["tipo_rima"] == "asonante",
+            etiqueta_con_ayuda("Tipo:", "rima_asonante", weight="bold"),
+            rx.text("Tipo:", weight="bold"),
+        ),
+    )
+
+
 def tarjeta_verso(resultado: dict) -> rx.Component:
     """Render one verse analysis card."""
     return rx.card(
         rx.vstack(
             rx.text(resultado["texto"], weight="bold", size="4"),
-            _fila_resultado("Sílabas gramaticales:", resultado["silabas_gramaticales"]),
+            _fila_resultado_ayuda(
+                "Sílabas gramaticales:",
+                "silabas_gramaticales",
+                resultado["silabas_gramaticales"],
+            ),
             rx.hstack(
-                rx.text("Sílabas métricas:", weight="bold"),
+                etiqueta_con_ayuda(
+                    "Sílabas métricas:",
+                    "silabas_metricas",
+                    weight="bold",
+                ),
                 rx.text(resultado["silabas_metricas"]),
                 rx.badge(resultado["tipo_verso"]),
                 spacing="2",
                 align="center",
+                wrap="wrap",
             ),
-            _fila_resultado("Sinalefas detectadas:", resultado["sinalefas"]),
-            _fila_resultado("Ajuste final:", resultado["ajuste_final"]),
-            _fila_resultado(
+            _fila_resultado_ayuda(
+                "Sinalefas detectadas:",
+                "sinalefas",
+                resultado["sinalefas"],
+            ),
+            _fila_resultado_ayuda(
+                "Ajuste final:",
+                "ajuste_final",
+                resultado["ajuste_final"],
+            ),
+            _fila_resultado_ayuda(
                 "Posiciones acentuadas:",
+                "posiciones_acentuadas",
                 resultado["posiciones_acentuadas_texto"],
             ),
             _fila_resultado("Última palabra:", resultado["ultima_palabra"]),
@@ -60,7 +105,13 @@ def tarjeta_verso(resultado: dict) -> rx.Component:
                 spacing="2",
                 align="start",
             ),
-            _fila_resultado("Tipo:", resultado["tipo_rima"]),
+            rx.hstack(
+                _etiqueta_tipo_rima(resultado),
+                rx.text(resultado["tipo_rima"]),
+                spacing="2",
+                align="start",
+                wrap="wrap",
+            ),
             _fila_resultado("Esquema de rima:", resultado["letra_rima"]),
             rimas_internas_resultado(resultado),
             spacing="2",

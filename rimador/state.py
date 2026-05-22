@@ -4,18 +4,20 @@ from html import escape
 
 import reflex as rx
 
+from core.exportacion.pdf import generar_pdf_analisis
 from core.metrica import analizar_metrica_verso, resumir_metrica_texto
 from core.rima import (
     clasificar_rima,
     detectar_rimas_en_texto,
-    obtener_esquema_rima,
+    obtener_esquemas_rima_por_estrofa,
     obtener_fragmento_rimante,
     obtener_ultima_palabra,
 )
 from core.ritmo import obtener_posiciones_acentuadas_verso
-from core.utils.texto import obtener_palabras, obtener_versos
+from core.utils.texto import obtener_estrofas, obtener_palabras
 from rimador.styles.colors import color_rima_final, color_rima_interna
 from rimador.styles.theme import EDITOR_LINE_HEIGHT, INLINE_RHYME_HEIGHT
+from rimador.version import APP_VERSION
 
 
 CONCEPTOS_APRENDER = [
@@ -84,15 +86,24 @@ class State(rx.State):
     seccion_actual: str = "analizador"
     texto: str = ""
     resultados: list[dict] = []
+    estrofas: list[list[str]] = []
+    estrofas_analisis: list[dict] = []
+    analisis_completo_items: list[dict] = []
     lineas_vista: list[dict] = []
     esquema_rima: list[str] = []
+    esquemas_rima_por_estrofa: list[dict] = []
     resumen_cantidad_versos: int = 0
+    resumen_cantidad_estrofas: int = 0
     resumen_tipo_predominante: str = "Sin versos"
     resumen_regularidad: str = "regular"
-    resumen_esquema_rima: str = "Sin esquema"
+    resumen_esquemas_rima: list[dict] = []
+    mostrar_advertencia_formato: bool = False
+    texto_extenso: bool = False
     busqueda_aprender: str = ""
     concepto_seleccionado: str = "silabas-gramaticales"
     panel_donacion_abierto: bool = False
+    version_vista: str = rx.LocalStorage("", name="rimador_version_vista")
+    mostrar_modal_novedades: bool = False
 
     @rx.var
     def conceptos_filtrados(self) -> list[dict]:
@@ -127,6 +138,15 @@ class State(rx.State):
         """Show the analyzer section."""
         self.seccion_actual = "analizador"
 
+    def verificar_novedades(self):
+        """Show release notes once for each app version."""
+        self.mostrar_modal_novedades = self.version_vista != APP_VERSION
+
+    def cerrar_novedades(self):
+        """Mark the current app version as seen."""
+        self.version_vista = APP_VERSION
+        self.mostrar_modal_novedades = False
+
     def mostrar_aprender(self):
         """Show the learning section."""
         self.seccion_actual = "aprender"
@@ -135,6 +155,10 @@ class State(rx.State):
         """Show the about section."""
         self.seccion_actual = "acerca_de"
 
+    def mostrar_analisis_completo(self):
+        """Show the complete analysis section."""
+        self.seccion_actual = "analisis_completo"
+
     def buscar_conceptos(self, busqueda: str):
         """Update the learning concept search."""
         self.busqueda_aprender = busqueda
@@ -142,6 +166,12 @@ class State(rx.State):
     def seleccionar_concepto(self, concepto_id: str):
         """Select one learning concept."""
         self.concepto_seleccionado = concepto_id
+
+    def ver_concepto_aprender(self, concepto_id: str):
+        """Show the learning section focused on one concept."""
+        if concepto_id:
+            self.concepto_seleccionado = concepto_id
+        self.seccion_actual = "aprender"
 
     def alternar_panel_donacion(self):
         """Toggle the donation support panel."""
@@ -155,21 +185,59 @@ class State(rx.State):
         """Close the donation support panel."""
         self.panel_donacion_abierto = False
 
+    def exportar_pdf(self):
+        """Download the current complete analysis as a PDF."""
+        pdf = generar_pdf_analisis(
+            self.texto,
+            self.resultados,
+            {
+                "versos_totales": self.resumen_cantidad_versos,
+                "estrofas": self.resumen_cantidad_estrofas,
+                "metrica_predominante": self.resumen_tipo_predominante,
+                "regularidad": self.resumen_regularidad,
+                "esquemas_rima": self.resumen_esquemas_rima,
+            },
+        )
+        return rx.download(
+            data=pdf,
+            filename="analisis_rimador.pdf",
+            mime_type="application/pdf",
+        )
+
     def analizar(self, texto: str):
         """Analyze the entered text verse by verse."""
         self.texto = texto
-        versos = obtener_versos(texto)
-        self.esquema_rima = obtener_esquema_rima(versos)
+        self.mostrar_advertencia_formato = len(texto) > 250 and texto.count("\n") < 2
+        self.estrofas = obtener_estrofas(texto)
+        versos = [
+            verso
+            for estrofa in self.estrofas
+            for verso in estrofa
+        ]
+        self.esquemas_rima_por_estrofa = obtener_esquemas_rima_por_estrofa(
+            self.estrofas
+        )
+        self.esquema_rima = [
+            letra
+            for esquema_estrofa in self.esquemas_rima_por_estrofa
+            for letra in esquema_estrofa["esquema"]
+        ]
         resumen_metrica = resumir_metrica_texto(versos)
         self.resumen_cantidad_versos = resumen_metrica["cantidad_versos"]
+        self.resumen_cantidad_estrofas = len(self.estrofas)
         self.resumen_tipo_predominante = (
             resumen_metrica["tipo_predominante"] or "Sin versos"
         )
         self.resumen_regularidad = (
             "regular" if resumen_metrica["es_regular"] else "irregular"
         )
-        self.resumen_esquema_rima = " ".join(self.esquema_rima) or "Sin esquema"
+        self.resumen_esquemas_rima = _preparar_resumen_esquemas_rima(
+            self.esquemas_rima_por_estrofa
+        )
+        self.texto_extenso = len(texto) > 700 or len(versos) > 12
         self.resultados = []
+        self.estrofas_analisis = []
+        self.analisis_completo_items = []
         rimas_en_texto = detectar_rimas_en_texto(versos)
         # Final rhyme letters and internal rhyme networks are styled separately.
         # A/B/C colors belong only to final words; internal groups use rhyme keys.
@@ -177,11 +245,24 @@ class State(rx.State):
             rimas_en_texto,
             versos,
         )
-        palabras_finales = [obtener_ultima_palabra(verso) for verso in versos]
-        tipos_rima = _obtener_tipos_rima_por_verso(
-            palabras_finales,
-            self.esquema_rima,
+        palabras_finales_por_estrofa = [
+            [obtener_ultima_palabra(verso) for verso in estrofa]
+            for estrofa in self.estrofas
+        ]
+        tipos_rima_por_estrofa = _obtener_tipos_rima_por_estrofa(
+            palabras_finales_por_estrofa,
+            self.esquemas_rima_por_estrofa,
         )
+        palabras_finales = [
+            palabra
+            for palabras_estrofa in palabras_finales_por_estrofa
+            for palabra in palabras_estrofa
+        ]
+        tipos_rima = [
+            tipo
+            for tipos_estrofa in tipos_rima_por_estrofa
+            for tipo in tipos_estrofa
+        ]
 
         for indice, verso in enumerate(versos):
             analisis = analizar_metrica_verso(verso)
@@ -242,6 +323,73 @@ class State(rx.State):
             )
 
         self.lineas_vista = _preparar_lineas_vista(texto, self.resultados)
+        self.estrofas_analisis = _preparar_estrofas_analisis(
+            self.estrofas,
+            self.esquemas_rima_por_estrofa,
+            self.resultados,
+        )
+        self.analisis_completo_items = _preparar_analisis_completo_items(
+            self.estrofas_analisis
+        )
+
+
+def _preparar_resumen_esquemas_rima(esquemas: list[dict]) -> list[dict]:
+    if not esquemas:
+        return [{"etiqueta": "Sin esquema", "esquema": ""}]
+
+    return [
+        {
+            "etiqueta": f"Estrofa {esquema['estrofa']}",
+            "esquema": esquema["esquema_texto"] or "Sin esquema",
+        }
+        for esquema in esquemas
+    ]
+
+
+def _preparar_estrofas_analisis(
+    estrofas: list[list[str]],
+    esquemas: list[dict],
+    resultados: list[dict],
+) -> list[dict]:
+    estrofas_analisis = []
+    indice_resultado = 0
+
+    for indice, estrofa in enumerate(estrofas):
+        cantidad_versos = len(estrofa)
+        versos_analizados = resultados[indice_resultado:indice_resultado + cantidad_versos]
+        esquema = esquemas[indice] if indice < len(esquemas) else {}
+        estrofas_analisis.append(
+            {
+                "numero": indice + 1,
+                "esquema_texto": esquema.get("esquema_texto", ""),
+                "versos": versos_analizados,
+            }
+        )
+        indice_resultado += cantidad_versos
+
+    return estrofas_analisis
+
+
+def _preparar_analisis_completo_items(estrofas_analisis: list[dict]) -> list[dict]:
+    items = []
+
+    for estrofa in estrofas_analisis:
+        items.append(
+            {
+                "tipo_item": "estrofa",
+                "numero": estrofa["numero"],
+                "esquema_texto": estrofa["esquema_texto"],
+            }
+        )
+        items.extend(
+            {
+                "tipo_item": "verso",
+                **verso,
+            }
+            for verso in estrofa["versos"]
+        )
+
+    return items
 
 
 def _formatear_sinalefas(sinalefas: list[dict]) -> str:
@@ -305,30 +453,38 @@ def _asignar_grupos_rimas_internas(
     return rimas_internas
 
 
-def _obtener_tipos_rima_por_verso(
-    palabras_finales: list[str],
-    esquema_rima: list[str],
-) -> list[str]:
-    tipos = []
+def _obtener_tipos_rima_por_estrofa(
+    palabras_finales_por_estrofa: list[list[str]],
+    esquemas_rima_por_estrofa: list[dict],
+) -> list[list[str]]:
+    tipos_por_estrofa = []
 
-    for indice, (palabra_actual, letra_actual) in enumerate(
-        zip(palabras_finales, esquema_rima)
+    for palabras_finales, esquema_estrofa in zip(
+        palabras_finales_por_estrofa,
+        esquemas_rima_por_estrofa,
     ):
-        tipo = "sin_rima"
+        esquema_rima = esquema_estrofa["esquema"]
+        tipos = []
 
-        for otro_indice, (otra_palabra, otra_letra) in enumerate(
+        for indice, (palabra_actual, letra_actual) in enumerate(
             zip(palabras_finales, esquema_rima)
         ):
-            if indice == otro_indice or letra_actual != otra_letra:
-                continue
+            tipo = "sin_rima"
 
-            tipo = clasificar_rima(palabra_actual, otra_palabra)
-            if tipo != "sin_rima":
-                break
+            for otro_indice, (otra_palabra, otra_letra) in enumerate(
+                zip(palabras_finales, esquema_rima)
+            ):
+                if indice == otro_indice or letra_actual != otra_letra:
+                    continue
 
-        tipos.append(tipo)
+                tipo = clasificar_rima(palabra_actual, otra_palabra)
+                if tipo != "sin_rima":
+                    break
 
-    return tipos
+            tipos.append(tipo)
+        tipos_por_estrofa.append(tipos)
+
+    return tipos_por_estrofa
 
 
 def _preparar_lineas_vista(texto: str, resultados: list[dict]) -> list[dict]:

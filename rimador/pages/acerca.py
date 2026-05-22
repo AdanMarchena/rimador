@@ -3,6 +3,7 @@
 import reflex as rx
 
 from rimador.components.donations import boton_donacion_acerca
+from rimador.components.novedades import historial_novedades
 from rimador.styles.theme import (
     BORDER_RADIUS,
     PANEL_PADDING,
@@ -45,6 +46,7 @@ def seccion_acerca_de() -> rx.Component:
             background=fondo_panel(),
             color=color_texto_principal(),
         ),
+        historial_novedades(),
         spacing="4",
         align="stretch",
         width="100%",

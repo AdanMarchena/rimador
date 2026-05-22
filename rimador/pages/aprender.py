@@ -5,6 +5,7 @@ import reflex as rx
 from rimador.components.learn_concepts import (
     detalle_concepto_aprender,
     lista_conceptos_aprender,
+    lista_conceptos_aprender_expandible,
 )
 from rimador.state import State
 from rimador.styles.theme import (
@@ -28,11 +29,20 @@ def seccion_aprender() -> rx.Component:
             background=fondo_panel(),
             color=color_texto_principal(),
         ),
-        rx.grid(
-            lista_conceptos_aprender(),
-            detalle_concepto_aprender(),
-            columns="minmax(220px, 0.8fr) minmax(0, 1.4fr)",
-            spacing="4",
+        rx.box(
+            lista_conceptos_aprender_expandible(),
+            display=rx.breakpoints(initial="block", md="none"),
+            width="100%",
+        ),
+        rx.box(
+            rx.grid(
+                lista_conceptos_aprender(),
+                detalle_concepto_aprender(),
+                columns="minmax(220px, 0.8fr) minmax(0, 1.4fr)",
+                spacing="4",
+                width="100%",
+            ),
+            display=rx.breakpoints(initial="none", md="block"),
             width="100%",
         ),
         spacing="4",
