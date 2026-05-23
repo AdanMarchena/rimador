@@ -19,7 +19,12 @@ from rimador.styles.theme import (
 
 def editor_texto() -> rx.Component:
     return rx.vstack(
-        rx.heading("Escribe tu texto", size="5"),
+        rx.hstack(
+            rx.heading("Escribe tu texto", size="5"),
+            align="center",
+            min_height="32px",
+            width="100%",
+        ),
         rx.grid(
             rx.text_area(
                 placeholder="Escribe un poema o varios versos...",

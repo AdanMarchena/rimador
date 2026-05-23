@@ -29,7 +29,7 @@ def contenido_actual() -> rx.Component:
 
 
 def layout_principal() -> rx.Component:
-    return rx.container(
+    return rx.box(
         rx.color_mode.button(position="top-right"),
         rx.box(
             boton_donacion_flotante(),
@@ -54,7 +54,10 @@ def layout_principal() -> rx.Component:
             align="stretch",
             width="100%",
         ),
-        max_width="1200px",
+        width="100%",
+        max_width=rx.breakpoints(initial="100%", md="calc(100vw - 4rem)"),
+        margin_x="auto",
+        padding_x=rx.breakpoints(initial="1rem", md="0"),
         padding_top="0.25rem",
         padding_bottom="2rem",
     )

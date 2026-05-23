@@ -196,6 +196,7 @@ def vista_analizada() -> rx.Component:
             justify="between",
             align="center",
             wrap="wrap",
+            min_height="32px",
             width="100%",
         ),
         rx.grid(
@@ -219,7 +220,7 @@ def vista_analizada() -> rx.Component:
                 padding=EDITOR_PADDING,
                 border=borde_panel(),
                 border_radius=BORDER_RADIUS,
-                background=fondo_suave(),
+                background=fondo_panel(),
                 color=color_texto_principal(),
                 overflow_y="auto",
             ),

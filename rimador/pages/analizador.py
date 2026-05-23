@@ -60,8 +60,18 @@ def seccion_analizador() -> rx.Component:
         aviso_texto_extenso(),
         rx.vstack(
             rx.flex(
-                editor_texto(),
-                vista_analizada(),
+                rx.box(
+                    editor_texto(),
+                    flex="1 1 0",
+                    min_width="0",
+                    width="100%",
+                ),
+                rx.box(
+                    vista_analizada(),
+                    flex="1 1 0",
+                    min_width="0",
+                    width="100%",
+                ),
                 direction=rx.breakpoints(
                     initial="column",
                     md=rx.cond(
