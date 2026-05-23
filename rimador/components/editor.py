@@ -17,6 +17,9 @@ from rimador.styles.theme import (
 )
 
 
+EDITOR_TEXTAREA_LINE_HEIGHT = "28px"
+
+
 def editor_texto() -> rx.Component:
     return rx.vstack(
         rx.hstack(
@@ -33,7 +36,13 @@ def editor_texto() -> rx.Component:
                 width="100%",
                 font_family="monospace",
                 font_size=EDITOR_FONT_SIZE,
-                line_height=EDITOR_LINE_HEIGHT,
+                line_height=EDITOR_TEXTAREA_LINE_HEIGHT,
+                class_name="rimador-editor-textarea",
+                style={
+                    "lineHeight": EDITOR_TEXTAREA_LINE_HEIGHT,
+                    "fontSize": "14px",
+                    "fontFamily": "monospace",
+                },
                 padding=EDITOR_PADDING,
                 height=ANALYSIS_EDITOR_HEIGHT,
                 border=borde_panel(),
