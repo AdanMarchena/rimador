@@ -57,6 +57,7 @@ def analizar_metrica_verso(verso: str) -> dict:
             "ajuste_final": 0,
             "silabas_metricas": 0,
             "tipo_verso": clasificar_tipo_verso(0),
+            "arte_verso": clasificar_arte_verso(0),
         }
 
     silabas_gramaticales = contar_silabas_gramaticales_verso(verso)
@@ -76,6 +77,7 @@ def analizar_metrica_verso(verso: str) -> dict:
         "ajuste_final": ajuste_final,
         "silabas_metricas": silabas_metricas,
         "tipo_verso": clasificar_tipo_verso(silabas_metricas),
+        "arte_verso": clasificar_arte_verso(silabas_metricas),
     }
 
 
@@ -99,6 +101,16 @@ def clasificar_tipo_verso(silabas_metricas: int) -> str:
     }
 
     return tipos.get(silabas_metricas, f"verso de {silabas_metricas} sílabas")
+
+
+def clasificar_arte_verso(silabas_metricas: int) -> str:
+    """Classify a verse as arte menor, arte mayor, or unknown."""
+    if silabas_metricas <= 0:
+        return "desconocido"
+    if silabas_metricas <= 8:
+        return "arte menor"
+
+    return "arte mayor"
 
 
 def _obtener_tipo_predominante(tipos_verso: list[str]) -> str:

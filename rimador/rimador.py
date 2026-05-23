@@ -18,4 +18,4 @@ app = rx.App(
         rx.el.link(rel="shortcut icon", href=FAVICON_SRC, type="image/png"),
     ],
 )
-app.add_page(index, title="Rimador", image=FAVICON_SRC, on_load=State.verificar_novedades)
+app.add_page(index, title="Rimador", image=FAVICON_SRC)

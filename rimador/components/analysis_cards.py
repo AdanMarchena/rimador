@@ -61,6 +61,18 @@ def _etiqueta_tipo_rima(resultado: dict) -> rx.Component:
     )
 
 
+def _etiqueta_arte_verso(resultado: dict) -> rx.Component:
+    return rx.cond(
+        resultado["arte_verso"] == "arte menor",
+        etiqueta_con_ayuda("Arte:", "arte_menor", weight="bold"),
+        rx.cond(
+            resultado["arte_verso"] == "arte mayor",
+            etiqueta_con_ayuda("Arte:", "arte_mayor", weight="bold"),
+            rx.text("Arte:", weight="bold"),
+        ),
+    )
+
+
 def tarjeta_verso(resultado: dict) -> rx.Component:
     """Render one verse analysis card."""
     return rx.card(
@@ -81,6 +93,13 @@ def tarjeta_verso(resultado: dict) -> rx.Component:
                 rx.badge(resultado["tipo_verso"]),
                 spacing="2",
                 align="center",
+                wrap="wrap",
+            ),
+            rx.hstack(
+                _etiqueta_arte_verso(resultado),
+                rx.text(resultado["arte_verso"]),
+                spacing="2",
+                align="start",
                 wrap="wrap",
             ),
             _fila_resultado_ayuda(
@@ -113,7 +132,6 @@ def tarjeta_verso(resultado: dict) -> rx.Component:
                 wrap="wrap",
             ),
             _fila_resultado("Esquema de rima:", resultado["letra_rima"]),
-            rimas_internas_resultado(resultado),
             spacing="2",
             align="start",
         ),
@@ -123,4 +141,44 @@ def tarjeta_verso(resultado: dict) -> rx.Component:
         border_radius=BORDER_RADIUS,
         background=fondo_panel(),
         color=color_texto_principal(),
+    )
+
+def tarjeta_grupos_rima(estrofa: dict) -> rx.Component:
+    """Render rhyme groups after all verses in one stanza."""
+    return rx.card(
+        rx.vstack(
+            rx.text("Grupos de rimas", weight="bold", size="4"),
+            rx.cond(
+                estrofa["tiene_grupos_rima"],
+                rx.text(
+                    estrofa["grupos_rima_texto"],
+                    white_space="pre-line",
+                ),
+                rx.text("Sin grupos de rima detectados"),
+            ),
+            spacing="2",
+            align="start",
+        ),
+        width="100%",
+        padding=PANEL_PADDING,
+        border=borde_panel(),
+        border_radius=BORDER_RADIUS,
+        background=fondo_panel(),
+        color=color_texto_principal(),
+    )
+
+
+def tarjetas_estrofa(estrofa: dict) -> rx.Component:
+    """Render all verse cards in a stanza and then its rhyme groups."""
+    return rx.vstack(
+        rx.text(
+            f"Estrofa {estrofa['numero']}",
+            weight="bold",
+            size="5",
+        ),
+        rx.foreach(estrofa["versos"], tarjeta_verso),
+        tarjeta_grupos_rima(estrofa),
+        spacing="4",
+        width="100%",
+        align="stretch",
     )

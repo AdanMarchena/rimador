@@ -31,6 +31,24 @@ AYUDA_TERMINOS = {
         "ejemplo": "8 sílabas métricas -> octosílabo; 11 -> endecasílabo.",
         "concepto_id": "silabas-metricas",
     },
+    "arte_menor": {
+        "titulo": "Arte menor",
+        "definicion": "Versos de hasta ocho sílabas métricas, frecuentes en formas populares y de ritmo ágil.",
+        "ejemplo": "Un octosílabo pertenece al arte menor.",
+        "concepto_id": "arte-menor",
+    },
+    "arte_mayor": {
+        "titulo": "Arte mayor",
+        "definicion": "Versos de nueve o más sílabas métricas, con ritmo más amplio y solemne.",
+        "ejemplo": "El endecasílabo y el alejandrino pertenecen al arte mayor.",
+        "concepto_id": "arte-mayor",
+    },
+    "verso_alejandrino": {
+        "titulo": "Verso alejandrino",
+        "definicion": "Verso de catorce sílabas métricas, tradicionalmente dividido en dos hemistiquios.",
+        "ejemplo": "7 + 7.",
+        "concepto_id": "verso-alejandrino",
+    },
     "rima_consonante": {
         "titulo": "Rima consonante",
         "definicion": "Coincidencia de vocales y consonantes desde la vocal tónica final.",

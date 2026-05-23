@@ -81,6 +81,10 @@ def _bloque_verso(indice: int, resultado: dict, estilos) -> list:
             estilos["BodyText"],
         ),
         Paragraph(
+            f"<b>Arte:</b> {_escapar(resultado.get('arte_verso', ''))}",
+            estilos["BodyText"],
+        ),
+        Paragraph(
             f"<b>Sinalefas:</b> {_escapar(resultado.get('sinalefas', ''))}",
             estilos["BodyText"],
         ),

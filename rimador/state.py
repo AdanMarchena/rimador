@@ -1,12 +1,15 @@
-"""Application state and analysis preparation helpers."""
+﻿"""Application state and analysis preparation helpers."""
 
 from html import escape
+from typing import TypedDict
 
 import reflex as rx
 
 from core.exportacion.pdf import generar_pdf_analisis
 from core.metrica import analizar_metrica_verso, resumir_metrica_texto
 from core.rima import (
+    agrupar_rimas_simples_por_estrofa,
+    agrupar_rimas_por_estrofa,
     clasificar_rima,
     detectar_rimas_en_texto,
     obtener_esquemas_rima_por_estrofa,
@@ -14,10 +17,38 @@ from core.rima import (
     obtener_ultima_palabra,
 )
 from core.ritmo import obtener_posiciones_acentuadas_verso
-from core.utils.texto import obtener_estrofas, obtener_palabras
+from core.utils.texto import obtener_estrofas, obtener_lineas, obtener_palabras
 from rimador.styles.colors import color_rima_final, color_rima_interna
 from rimador.styles.theme import EDITOR_LINE_HEIGHT, INLINE_RHYME_HEIGHT
 from rimador.version import APP_VERSION
+
+
+class ResultadoAnalisis(TypedDict, total=False):
+    texto: str
+    html_vista_rima: str
+    silabas_gramaticales: int | str
+    silabas_metricas: int | str
+    tipo_verso: str
+    arte_verso: str
+    sinalefas: str
+    ajuste_final: str
+    posiciones_acentuadas: list[int]
+    posiciones_acentuadas_texto: str
+    ultima_palabra: str
+    fragmento_rimante: str
+    tipo_rima: str
+    letra_rima: str
+    tiene_rimas_internas: bool
+    rimas_internas_texto: str
+
+
+class EstrofaAnalisis(TypedDict):
+    numero: int
+    esquema_texto: str
+    grupos_rima: list[dict]
+    grupos_rima_texto: str
+    tiene_grupos_rima: bool
+    versos: list[ResultadoAnalisis]
 
 
 CONCEPTOS_APRENDER = [
@@ -44,6 +75,30 @@ CONCEPTOS_APRENDER = [
         "definicion": "Unión métrica entre la vocal final de una palabra y la vocal inicial de la siguiente. Reduce el conteo métrico del verso.",
         "ejemplo": "En “la estrella”, la vocal final de “la” se une con la vocal inicial de “estrella”.",
         "uso_en_rimador": "Rimador detecta sinalefas básicas y las resta del conteo métrico del verso.",
+    },
+    {
+        "id": "arte-menor",
+        "titulo": "Arte menor",
+        "categoria": "Métrica",
+        "definicion": "Versos de hasta ocho sílabas métricas. Suelen asociarse a formas populares, canciones, romances y composiciones de ritmo ágil.",
+        "ejemplo": "Un octosílabo pertenece al arte menor.",
+        "uso_en_rimador": "Rimador lo muestra como clasificación de arte junto al análisis métrico de cada verso.",
+    },
+    {
+        "id": "arte-mayor",
+        "titulo": "Arte mayor",
+        "categoria": "Métrica",
+        "definicion": "Versos de nueve o más sílabas métricas. Suelen tener un ritmo más amplio y solemne.",
+        "ejemplo": "El endecasílabo y el alejandrino pertenecen al arte mayor.",
+        "uso_en_rimador": "Rimador lo muestra como clasificación de arte junto al análisis métrico de cada verso.",
+    },
+    {
+        "id": "verso-alejandrino",
+        "titulo": "Verso alejandrino",
+        "categoria": "Métrica",
+        "definicion": "Verso de catorce sílabas métricas. Tradicionalmente se divide en dos hemistiquios de siete sílabas separados por una cesura.",
+        "ejemplo": "7 + 7.",
+        "uso_en_rimador": "Rimador lo identifica como tipo de verso y lo clasifica dentro del arte mayor.",
     },
     {
         "id": "rima-consonante",
@@ -85,13 +140,16 @@ class State(rx.State):
 
     seccion_actual: str = "analizador"
     texto: str = ""
-    resultados: list[dict] = []
+    resultados: list[ResultadoAnalisis] = []
     estrofas: list[list[str]] = []
-    estrofas_analisis: list[dict] = []
+    estrofas_analisis: list[EstrofaAnalisis] = []
     analisis_completo_items: list[dict] = []
     lineas_vista: list[dict] = []
     esquema_rima: list[str] = []
+    modo_visualizacion: str = "rimas"
+    layout_analizador: str = "horizontal"
     esquemas_rima_por_estrofa: list[dict] = []
+    grupos_rima_por_estrofa: list[dict] = []
     resumen_cantidad_versos: int = 0
     resumen_cantidad_estrofas: int = 0
     resumen_tipo_predominante: str = "Sin versos"
@@ -159,6 +217,22 @@ class State(rx.State):
         """Show the complete analysis section."""
         self.seccion_actual = "analisis_completo"
 
+    def set_modo_rimas(self):
+        """Show rhyme highlighting in the analyzed view."""
+        self.modo_visualizacion = "rimas"
+
+    def set_modo_ritmo(self):
+        """Show rhythm highlighting in the analyzed view."""
+        self.modo_visualizacion = "ritmo"
+
+    def set_layout_horizontal(self):
+        """Show editor and analyzed view side by side on desktop."""
+        self.layout_analizador = "horizontal"
+
+    def set_layout_vertical(self):
+        """Show editor above analyzed view."""
+        self.layout_analizador = "vertical"
+
     def buscar_conceptos(self, busqueda: str):
         """Update the learning concept search."""
         self.busqueda_aprender = busqueda
@@ -217,6 +291,7 @@ class State(rx.State):
         self.esquemas_rima_por_estrofa = obtener_esquemas_rima_por_estrofa(
             self.estrofas
         )
+        self.grupos_rima_por_estrofa = agrupar_rimas_simples_por_estrofa(self.estrofas)
         self.esquema_rima = [
             letra
             for esquema_estrofa in self.esquemas_rima_por_estrofa
@@ -288,13 +363,13 @@ class State(rx.State):
                 rimas_internas_verso,
                 ultima_palabra,
             )
-
             self.resultados.append(
                 {
                     "texto": analisis["verso"],
                     "silabas_gramaticales": analisis["silabas_gramaticales"],
                     "silabas_metricas": analisis["silabas_metricas"],
                     "tipo_verso": analisis["tipo_verso"],
+                    "arte_verso": analisis["arte_verso"],
                     "sinalefas": _formatear_sinalefas(analisis["sinalefas"]),
                     "ajuste_final": _formatear_ajuste_final(
                         analisis["ajuste_final"],
@@ -326,6 +401,7 @@ class State(rx.State):
         self.estrofas_analisis = _preparar_estrofas_analisis(
             self.estrofas,
             self.esquemas_rima_por_estrofa,
+            self.grupos_rima_por_estrofa,
             self.resultados,
         )
         self.analisis_completo_items = _preparar_analisis_completo_items(
@@ -349,6 +425,7 @@ def _preparar_resumen_esquemas_rima(esquemas: list[dict]) -> list[dict]:
 def _preparar_estrofas_analisis(
     estrofas: list[list[str]],
     esquemas: list[dict],
+    grupos_rima: list[dict],
     resultados: list[dict],
 ) -> list[dict]:
     estrofas_analisis = []
@@ -358,10 +435,16 @@ def _preparar_estrofas_analisis(
         cantidad_versos = len(estrofa)
         versos_analizados = resultados[indice_resultado:indice_resultado + cantidad_versos]
         esquema = esquemas[indice] if indice < len(esquemas) else {}
+        grupos = grupos_rima[indice] if indice < len(grupos_rima) else {}
         estrofas_analisis.append(
             {
                 "numero": indice + 1,
                 "esquema_texto": esquema.get("esquema_texto", ""),
+                "grupos_rima": grupos.get("grupos", []),
+                "grupos_rima_texto": _formatear_grupos_rima_estrofa(
+                    grupos.get("grupos", [])
+                ),
+                "tiene_grupos_rima": bool(grupos.get("grupos", [])),
                 "versos": versos_analizados,
             }
         )
@@ -376,6 +459,7 @@ def _preparar_analisis_completo_items(estrofas_analisis: list[dict]) -> list[dic
     for estrofa in estrofas_analisis:
         items.append(
             {
+                **_item_analisis_base(),
                 "tipo_item": "estrofa",
                 "numero": estrofa["numero"],
                 "esquema_texto": estrofa["esquema_texto"],
@@ -383,13 +467,41 @@ def _preparar_analisis_completo_items(estrofas_analisis: list[dict]) -> list[dic
         )
         items.extend(
             {
+                **_item_analisis_base(),
                 "tipo_item": "verso",
                 **verso,
             }
             for verso in estrofa["versos"]
         )
+        items.append(
+            {
+                **_item_analisis_base(),
+                "tipo_item": "grupos_rima",
+                "tiene_grupos_rima": estrofa["tiene_grupos_rima"],
+                "grupos_rima_texto": _formatear_grupos_rima_estrofa(
+                    estrofa["grupos_rima"]
+                ),
+            }
+        )
 
     return items
+
+
+def _item_analisis_base() -> dict:
+    return {
+        "tipo_item": "",
+        "numero": 0,
+        "esquema_texto": "",
+        "html_vista_rima": "",
+        "silabas_gramaticales": "",
+        "silabas_metricas": "",
+        "tipo_verso": "",
+        "arte_verso": "",
+        "tipo_rima": "sin_rima",
+        "letra_rima": "",
+        "tiene_grupos_rima": False,
+        "grupos_rima_texto": "",
+    }
 
 
 def _formatear_sinalefas(sinalefas: list[dict]) -> str:
@@ -423,6 +535,26 @@ def _formatear_rimas_internas(rimas_internas: list[dict]) -> str:
         f"{rima['palabra']}: {rima['tipo']} ({rima['grupo_interno']})"
         for rima in rimas_internas
     )
+
+
+def _formatear_grupos_rima_estrofa(grupos: list[dict]) -> str:
+    if not grupos:
+        return "Sin grupos de rima detectados"
+
+    lineas = []
+
+    for grupo in grupos:
+        palabras = ", ".join(grupo["palabras"])
+        lineas.append(f"Grupo {grupo['grupo']}: {palabras}")
+
+    return "\n".join(lineas)
+
+
+def _formatear_posiciones_ritmo(posiciones: list[int]) -> str:
+    if not posiciones:
+        return "sin datos"
+
+    return ", ".join(str(posicion) for posicion in posiciones)
 
 
 def _preparar_rimas_globales_verso(rimas_en_verso: dict[int, dict]) -> list[dict]:
@@ -489,31 +621,91 @@ def _obtener_tipos_rima_por_estrofa(
 
 def _preparar_lineas_vista(texto: str, resultados: list[dict]) -> list[dict]:
     lineas_vista = []
-    indice_resultado = 0
 
-    for linea in texto.splitlines():
-        if not linea.strip():
+    for linea in construir_lineas_visualizacion(texto, resultados):
+        resultado = linea["resultado"]
+        if linea["es_vacia"]:
             lineas_vista.append(
                 {
+                    "texto": "",
                     "html_vista_rima": "",
+                    "letra_rima": "",
+                    "letra_rima_background": "transparent",
+                    "letra_rima_text": "transparent",
+                    "letra_rima_border": "transparent",
+                    "posiciones_acentuadas": [],
+                    "posiciones_acentuadas_texto": "sin datos",
+                    "tiene_posiciones_acentuadas": False,
                     "silabas_gramaticales": None,
                     "silabas_metricas": None,
                 }
             )
             continue
 
-        if indice_resultado < len(resultados):
-            resultado = resultados[indice_resultado]
+        if resultado is None:
             lineas_vista.append(
                 {
-                    "html_vista_rima": resultado["html_vista_rima"],
-                    "silabas_gramaticales": resultado["silabas_gramaticales"],
-                    "silabas_metricas": resultado["silabas_metricas"],
+                    "texto": linea["texto"],
+                    "html_vista_rima": escape(linea["texto"]),
+                    "letra_rima": "",
+                    "letra_rima_background": "transparent",
+                    "letra_rima_text": "transparent",
+                    "letra_rima_border": "transparent",
+                    "posiciones_acentuadas": [],
+                    "posiciones_acentuadas_texto": "sin datos",
+                    "tiene_posiciones_acentuadas": False,
+                    "silabas_gramaticales": None,
+                    "silabas_metricas": None,
                 }
             )
-            indice_resultado += 1
+            continue
+
+        lineas_vista.append(
+            {
+                "texto": resultado["texto"],
+                "html_vista_rima": resultado["html_vista_rima"],
+                "letra_rima": resultado["letra_rima"],
+                "letra_rima_background": resultado["color_rima"]["background"],
+                "letra_rima_text": resultado["color_rima"]["text"],
+                "letra_rima_border": resultado["color_rima"]["border"],
+                "posiciones_acentuadas": resultado["posiciones_acentuadas"],
+                "posiciones_acentuadas_texto": _formatear_posiciones_ritmo(
+                    resultado["posiciones_acentuadas"]
+                ),
+                "tiene_posiciones_acentuadas": bool(
+                    resultado["posiciones_acentuadas"]
+                ),
+                "silabas_gramaticales": resultado["silabas_gramaticales"],
+                "silabas_metricas": resultado["silabas_metricas"],
+            }
+        )
 
     return lineas_vista
+
+
+def construir_lineas_visualizacion(texto: str, resultados: list[dict]) -> list[dict]:
+    """Pair each visual text line with the next analysis result when needed."""
+    lineas = []
+    indice_resultado = 0
+
+    for linea in obtener_lineas(texto):
+        es_vacia = not linea.strip()
+        resultado = None
+
+        if not es_vacia:
+            if indice_resultado < len(resultados):
+                resultado = resultados[indice_resultado]
+            indice_resultado += 1
+
+        lineas.append(
+            {
+                "texto": linea,
+                "es_vacia": es_vacia,
+                "resultado": resultado,
+            }
+        )
+
+    return lineas
 
 
 def _preparar_vista_rima(
@@ -595,9 +787,8 @@ def _preparar_html_vista_rima(
     return (
         '<span style="display:flex;flex-wrap:wrap;column-gap:0.5rem;'
         f"row-gap:0;align-items:center;line-height:{EDITOR_LINE_HEIGHT};"
-        'margin:0;padding:0;">'
+        'margin:0;padding:0;white-space:normal;overflow-wrap:anywhere;">'
         + "".join(partes)
-        + _renderizar_badge_rima(rima_final["letra"], color_final)
         + "</span>"
     )
 
@@ -689,3 +880,4 @@ def _renderizar_badge_rima(letra_rima: str, color: dict) -> str:
         f'padding-top:0;padding-bottom:0;">'
         f"{escape(letra_rima)}</span>"
     )
+

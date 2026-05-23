@@ -47,6 +47,31 @@ def _dato_verso(titulo: str, clave_ayuda: str, valor: rx.Component) -> rx.Compon
     )
 
 
+def _dato_arte_verso(resultado: dict) -> rx.Component:
+    return rx.cond(
+        resultado["arte_verso"] == "arte menor",
+        _dato_verso(
+            "Arte",
+            "arte_menor",
+            rx.text(resultado["arte_verso"], weight="bold"),
+        ),
+        rx.cond(
+            resultado["arte_verso"] == "arte mayor",
+            _dato_verso(
+                "Arte",
+                "arte_mayor",
+                rx.text(resultado["arte_verso"], weight="bold"),
+            ),
+            rx.vstack(
+                rx.text("Arte", size="2", color=color_texto_secundario()),
+                rx.text(resultado["arte_verso"], weight="bold"),
+                spacing="1",
+                align="start",
+            ),
+        ),
+    )
+
+
 def _fila_verso_completo(resultado: dict) -> rx.Component:
     return rx.box(
         rx.vstack(
@@ -75,6 +100,7 @@ def _fila_verso_completo(resultado: dict) -> rx.Component:
                     "tipo_verso",
                     rx.badge(resultado["tipo_verso"]),
                 ),
+                _dato_arte_verso(resultado),
                 rx.vstack(
                     rx.cond(
                         resultado["tipo_rima"] == "consonante",
@@ -120,11 +146,36 @@ def _fila_verso_completo(resultado: dict) -> rx.Component:
     )
 
 
-def _item_analisis_completo(item: dict) -> rx.Component:
-    return rx.cond(
-        item["tipo_item"] == "estrofa",
-        _encabezado_estrofa(item),
-        _fila_verso_completo(item),
+def _resumen_grupos_rima(item: dict) -> rx.Component:
+    return rx.box(
+        rx.vstack(
+            rx.text("Grupos de rimas", weight="bold"),
+            rx.text(
+                item["grupos_rima_texto"],
+                white_space="pre-line",
+                line_height="1.7",
+                color=color_texto_principal(),
+            ),
+            spacing="2",
+            align="stretch",
+        ),
+        width="100%",
+        padding=PANEL_PADDING,
+        border=borde_panel(),
+        border_radius=BORDER_RADIUS,
+        background=fondo_panel(),
+        color=color_texto_principal(),
+    )
+
+
+def _estrofa_completa(estrofa: dict) -> rx.Component:
+    return rx.vstack(
+        _encabezado_estrofa(estrofa),
+        rx.foreach(estrofa["versos"], _fila_verso_completo),
+        _resumen_grupos_rima(estrofa),
+        spacing="3",
+        align="stretch",
+        width="100%",
     )
 
 
@@ -149,8 +200,8 @@ def seccion_analisis_completo() -> rx.Component:
             width="100%",
         ),
         rx.vstack(
-            rx.foreach(State.analisis_completo_items, _item_analisis_completo),
-            spacing="3",
+            rx.foreach(State.estrofas_analisis, _estrofa_completa),
+            spacing="4",
             align="stretch",
             width="100%",
         ),

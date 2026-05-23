@@ -1,7 +1,9 @@
 from core.rima import (
+    agrupar_rimas_por_estrofa,
     clasificar_rima,
     detectar_rimas_en_texto,
     detectar_rimas_internas,
+    obtener_clave_asonante,
     obtener_esquema_rima,
     obtener_esquemas_rima_por_estrofa,
     obtener_fragmento_rimante,
@@ -37,6 +39,19 @@ def test_obtener_fragmento_rimante_asonante():
     assert obtener_fragmento_rimante("camino", "asonante") == "io"
 
 
+def test_obtener_clave_asonante():
+    assert obtener_clave_asonante("habla") == "aa"
+    assert obtener_clave_asonante("alba") == "aa"
+    assert obtener_clave_asonante("l\u00e9vate") == "ee"
+    assert obtener_clave_asonante("pret\u00e9ndeme") == "ee"
+    assert obtener_clave_asonante("requiero") == "eo"
+    assert obtener_clave_asonante("compa\u00f1ero") == "eo"
+    assert obtener_clave_asonante("cielo") == "eo"
+    assert obtener_clave_asonante("muero") == "eo"
+    assert obtener_clave_asonante("c\u00e1ntaro") == "ao"
+    assert obtener_clave_asonante("patria") == "aa"
+
+
 def test_obtener_fragmento_rimante_sin_rima():
     assert obtener_fragmento_rimante("coraz\u00f3n", "sin_rima") == ""
 
@@ -51,13 +66,20 @@ def test_rima_consonante():
 def test_rima_asonante():
     assert rima_asonante("casa", "rama") is True
     assert rima_asonante("camino", "destino") is True
-    assert rima_asonante("canci\u00f3n", "dolor") is False
+    assert rima_asonante("canci\u00f3n", "dolor") is True
+    assert rima_asonante("habla", "alba") is True
+    assert rima_asonante("l\u00e9vate", "pret\u00e9ndeme") is True
+    assert rima_asonante("requiero", "compa\u00f1ero") is True
+    assert rima_asonante("cielo", "muero") is True
+    assert rima_asonante("c\u00e1ntaro", "santo") is True
+    assert rima_asonante("patria", "alma") is True
+    assert rima_asonante("l\u00e9vate", "entonces") is False
 
 
 def test_clasificar_rima():
     assert clasificar_rima("canci\u00f3n", "coraz\u00f3n") == "consonante"
     assert clasificar_rima("casa", "rama") == "asonante"
-    assert clasificar_rima("canci\u00f3n", "dolor") == "sin_rima"
+    assert clasificar_rima("canci\u00f3n", "dolor") == "asonante"
 
 
 def test_detectar_rimas_internas_consonantes():
@@ -79,6 +101,26 @@ def test_detectar_rimas_internas_asonantes():
 def test_detectar_rimas_internas_ignora_sin_rima_y_ultima_palabra():
     assert detectar_rimas_internas("noche sin final") == []
     assert detectar_rimas_internas("destino") == []
+
+
+def test_detectar_rimas_en_texto_no_agrupa_asonancia_de_una_vocal():
+    rimas = detectar_rimas_en_texto(["canci\u00f3n", "dolor"])
+
+    assert rimas == {}
+
+
+def test_detectar_rimas_en_texto_agrupa_asonancias_fuertes_validas():
+    rimas = detectar_rimas_en_texto(
+        [
+            "habla alba",
+            "l\u00e9vate pret\u00e9ndeme",
+        ]
+    )
+
+    assert rimas[0][0]["grupo_interno"] == "asonante:aa"
+    assert rimas[0][1]["grupo_interno"] == "asonante:aa"
+    assert rimas[1][0]["grupo_interno"] == "asonante:ee"
+    assert rimas[1][1]["grupo_interno"] == "asonante:ee"
 
 
 def test_detectar_rimas_en_texto_detecta_rimas_globales():
@@ -239,3 +281,44 @@ def test_obtener_esquemas_rima_por_estrofa_no_mezcla_estrofas():
             "esquema_texto": "AB",
         },
     ]
+
+
+def test_agrupar_rimas_por_estrofa_reinicia_y_filtra_grupos():
+    estrofas = [
+        [
+            "Habla con los p\u00e1jaros",
+            "y l\u00e9vate al alba.",
+            "Y cuando las carnes",
+            "te sean tornadas,",
+            "y cuando hayas puesto",
+            "en ellas el alma",
+            "que por las alcobas",
+            "se qued\u00f3 enredada,",
+            "entonces, buen hombre,",
+            "pret\u00e9ndeme blanca,",
+            "pret\u00e9ndeme n\u00edvea,",
+            "pret\u00e9ndeme casta.",
+        ],
+    ]
+
+    grupos = agrupar_rimas_por_estrofa(estrofas)[0]["grupos"]
+
+    assert _hay_grupo_con_palabras(
+        grupos,
+        [
+            "Habla",
+            "alba",
+            "tornadas",
+            "hayas",
+            "alma",
+            "enredada",
+            "blanca",
+            "casta",
+        ],
+    )
+    assert _hay_grupo_con_palabras(grupos, ["l\u00e9vate", "pret\u00e9ndeme"])
+
+
+def _hay_grupo_con_palabras(grupos: list[dict], palabras: list[str]) -> bool:
+    palabras_esperadas = set(palabras)
+    return any(palabras_esperadas <= set(grupo["palabras"]) for grupo in grupos)

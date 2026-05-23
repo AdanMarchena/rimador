@@ -10,6 +10,7 @@ def test_generar_pdf_analisis_devuelve_pdf():
                 "silabas_gramaticales": 5,
                 "silabas_metricas": 5,
                 "tipo_verso": "pentasílabo",
+                "arte_verso": "arte menor",
                 "sinalefas": "Sin sinalefas",
                 "ajuste_final": "0 por palabra llana",
                 "letra_rima": "A",

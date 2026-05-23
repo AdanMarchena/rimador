@@ -5,7 +5,6 @@ import reflex as rx
 from rimador.components.donations import boton_donacion_flotante
 from rimador.components.header import encabezado_marca
 from rimador.components.navigation import menu_superior
-from rimador.components.novedades import modal_novedades
 from rimador.pages.acerca import seccion_acerca_de
 from rimador.pages.analisis_completo import seccion_analisis_completo
 from rimador.pages.analizador import seccion_analizador
@@ -31,7 +30,6 @@ def contenido_actual() -> rx.Component:
 
 def layout_principal() -> rx.Component:
     return rx.container(
-        modal_novedades(),
         rx.color_mode.button(position="top-right"),
         rx.box(
             boton_donacion_flotante(),
@@ -52,10 +50,11 @@ def layout_principal() -> rx.Component:
                 spacing="4",
             ),
             contenido_actual(),
-            spacing="5",
+            spacing="1",
             align="stretch",
             width="100%",
         ),
         max_width="1200px",
-        padding_y="3rem",
+        padding_top="0.25rem",
+        padding_bottom="2rem",
     )

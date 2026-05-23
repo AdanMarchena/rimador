@@ -6,25 +6,24 @@ from rimador.styles.theme import LOGO_SRC
 
 
 def encabezado_marca() -> rx.Component:
-    return rx.vstack(
-        rx.hstack(
-            rx.image(
-                src=LOGO_SRC,
-                alt="Logo de Rimador",
-                height="60px",
-                width="90px",
-                object_fit="cover",
-                object_position="32% 50%",
-                border_radius="10px",
+    return rx.box(
+        rx.image(
+            src=LOGO_SRC,
+            alt="Logo de Rimador",
+            height=rx.breakpoints(initial="120px", sm="260px", lg="360px"),
+            width="auto",
+            object_fit="contain",
+            display="block",
+            margin="0",
+            transform=rx.breakpoints(
+                initial="translateY(-8px)",
+                sm="translateY(-36px)",
+                lg="translateY(-58px)",
             ),
-            rx.heading("Rimador", size="9"),
-            spacing="3",
-            align="center",
         ),
-        rx.text(
-            "Analiza métrica, ritmo básico y rima verso a verso.",
-            size="5",
-        ),
-        spacing="2",
-        align="start",
+        height=rx.breakpoints(initial="98px", sm="190px", lg="235px"),
+        overflow="hidden",
+        padding_top="0.25rem",
+        padding_bottom="0",
+        margin="0",
     )

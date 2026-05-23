@@ -2,6 +2,7 @@
 
 from core.metrica import (
     analizar_metrica_verso,
+    clasificar_arte_verso,
     clasificar_palabra_por_acento,
     clasificar_tipo_verso,
     contar_silabas_gramaticales_verso,
@@ -50,6 +51,15 @@ def test_clasifica_tipo_verso():
     assert clasificar_tipo_verso(15) == "verso de 15 sílabas"
 
 
+def test_clasifica_arte_verso():
+    assert clasificar_arte_verso(0) == "desconocido"
+    assert clasificar_arte_verso(-1) == "desconocido"
+    assert clasificar_arte_verso(2) == "arte menor"
+    assert clasificar_arte_verso(8) == "arte menor"
+    assert clasificar_arte_verso(9) == "arte mayor"
+    assert clasificar_arte_verso(14) == "arte mayor"
+
+
 def test_cuenta_silabas_metricas_con_sinalefa_basica():
     assert contar_silabas_gramaticales_verso("mi alma") == 3
     assert contar_silabas_metricas_verso("mi alma") == 2
@@ -95,6 +105,7 @@ def test_analiza_metrica_detallada_de_verso():
         "ajuste_final": 1,
         "silabas_metricas": 8,
         "tipo_verso": "octosílabo",
+        "arte_verso": "arte menor",
     }
 
 
@@ -111,6 +122,7 @@ def test_analiza_metrica_con_ultima_palabra_en_sinalefa():
     assert analisis["ajuste_final"] == 0
     assert analisis["silabas_metricas"] == 4
     assert analisis["tipo_verso"] == "tetrasílabo"
+    assert analisis["arte_verso"] == "arte menor"
 
 
 def test_analiza_metrica_con_sinalefa_y_palabra_final_llana():
@@ -124,6 +136,7 @@ def test_analiza_metrica_con_sinalefa_y_palabra_final_llana():
         "ajuste_final": 0,
         "silabas_metricas": 3,
         "tipo_verso": "trisílabo",
+        "arte_verso": "arte menor",
     }
 
 

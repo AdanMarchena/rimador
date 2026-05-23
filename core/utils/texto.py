@@ -3,6 +3,14 @@
 SIGNOS_PUNTUACION_BASICOS = ".,;:!?\u00a1\u00bf\"'()[]{}"
 
 
+def obtener_lineas(texto: str) -> list[str]:
+    """Return user-entered logical lines, preserving the active final line."""
+    if not texto:
+        return []
+
+    return texto.split("\n")
+
+
 def obtener_versos(texto: str) -> list[str]:
     """Return real verses from user-entered text.
 
@@ -11,7 +19,7 @@ def obtener_versos(texto: str) -> list[str]:
     only changes how text is displayed on screen. Later, these verses will be
     analyzed for metric and rhythmic structure.
     """
-    return [linea.strip() for linea in texto.splitlines() if linea.strip()]
+    return [linea.strip() for linea in obtener_lineas(texto) if linea.strip()]
 
 
 def obtener_estrofas(texto: str) -> list[list[str]]:
@@ -19,7 +27,7 @@ def obtener_estrofas(texto: str) -> list[list[str]]:
     estrofas = []
     estrofa_actual = []
 
-    for linea in texto.splitlines():
+    for linea in obtener_lineas(texto):
         verso = linea.strip()
         if verso:
             estrofa_actual.append(verso)

@@ -1,4 +1,20 @@
-from core.utils.texto import obtener_estrofas, obtener_palabras, obtener_versos
+from core.utils.texto import (
+    obtener_estrofas,
+    obtener_lineas,
+    obtener_palabras,
+    obtener_versos,
+)
+
+
+def test_obtener_lineas_conserva_linea_activa_sin_salto_final():
+    assert obtener_lineas("primer verso\nultimo verso") == [
+        "primer verso",
+        "ultimo verso",
+    ]
+
+
+def test_obtener_lineas_conserva_linea_vacia_final():
+    assert obtener_lineas("primer verso\n") == ["primer verso", ""]
 
 
 def test_obtener_versos_multiples_versos():
